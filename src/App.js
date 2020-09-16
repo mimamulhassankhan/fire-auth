@@ -17,9 +17,10 @@ function App() {
     error: '',
     success: false
   })
-  const provider = new firebase.auth.GoogleAuthProvider();
+  const googleProvider = new firebase.auth.GoogleAuthProvider();
+  const fbProvider = new firebase.auth.FacebookAuthProvider();
   const handleSignIn = () => {
-    firebase.auth().signInWithPopup(provider)
+    firebase.auth().signInWithPopup(googleProvider)
     .then( res => {
       const {email, photoURL, displayName} = res.user;
       const signedInUser = {
@@ -101,6 +102,18 @@ function App() {
     e.preventDefault();
   }
 
+  const handleFbLogin = (e) => {
+    firebase.auth().signInWithPopup(fbProvider)
+    .then(res => {
+        console.log(res);
+    })
+    .catch(err => {
+      console.log(err.message);
+    })
+    console.log('btn clicked');
+    e.preventDefault();
+  }
+
   const updateUserInfo = name => {
     const user = firebase.auth().currentUser;
 
@@ -117,6 +130,8 @@ function App() {
       {
         user.isSignedIn ? <button onClick={handleSignOut}>Sign Out</button> : <button onClick={handleSignIn}>Sign in</button>
       }
+      <br/>
+      <button onClick={handleFbLogin}>Sign in with facebook</button>
       {
         user.isSignedIn && <div>
             <h3>Name: {user.name}</h3>
