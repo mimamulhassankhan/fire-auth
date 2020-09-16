@@ -7,6 +7,7 @@ import firebaseConfig from './firebase.config';
 firebase.initializeApp(firebaseConfig);
 
 function App() {
+  const [newUser, setNewUser] = useState(false);
   const [user, setUser] = useState({
     isSignedIn : false,
     name: '',
@@ -65,13 +66,14 @@ function App() {
     
   }
   const handleSubmit= (e) => {
-    if(user.email && user.password){
+    if(newUser && user.email && user.password){
       firebase.auth().createUserWithEmailAndPassword(user.email, user.password)
       .then(res => {
         const newUserInfo = {...user};
         newUserInfo.error = '';
         newUserInfo.success = true;
         setUser(newUserInfo);
+        updateUserInfo(user.name);
       })
       .catch(err => {
         console.log(err.message);
@@ -81,7 +83,34 @@ function App() {
         setUser(newUserInfo);
       })
     }
+    else if(!newUser && user.email && user.password){
+      firebase.auth().signInWithEmailAndPassword(user.email, user.password)
+      .then(res => {
+        const newUserInfo = {...user};
+        newUserInfo.error = '';
+        newUserInfo.success = true;
+        setUser(newUserInfo);
+        console.log(res);
+      }).catch(err => {
+        const newUserInfo = {...user};
+        newUserInfo.error = err.message;
+        newUserInfo.success = false;
+        setUser(newUserInfo);
+      })
+    }
     e.preventDefault();
+  }
+
+  const updateUserInfo = name => {
+    const user = firebase.auth().currentUser;
+
+    user.updateProfile({
+      displayName: name,
+    }).then(
+      console.log('user updated successfully!!!')
+    ).catch(err => {
+      console.log('not updated');
+    });
   }
   return (
     <div className="App">
@@ -100,7 +129,10 @@ function App() {
       <p>Email: {user.email}</p>
       <p>Password: {user.password}</p>
       <form onSubmit={handleSubmit}>
-        <input onBlur={handleBlur} type="text" name="name" placeholder="Enter Name" />
+        <input onChange={() => setNewUser(!newUser)} type="checkbox" name="newUser"/>
+        <label htmlFor="newUser">Create New User</label>
+        <br/>
+        { newUser && <input onBlur={handleBlur} type="text" name="name" placeholder="Enter Name" />}
         <br/>
         <input onBlur={handleBlur} type="text" name="email"  placeholder="Enter Email" required/>
         <br/> 
@@ -110,7 +142,7 @@ function App() {
       </form>
       <p style={{color: 'red'}}>{user.error}</p>
       {
-        user.success && <p style={{color: 'green'}}>Successfully account created.</p>
+        user.success && <p style={{color: 'green'}}>Successfully account {newUser ? 'created' : 'Logged In'}.</p>
       }
     </div>
   );
